@@ -38,7 +38,7 @@
            (asdf:component-version sys)))
   " Compiled On "
   (format-expand *time-format-string-alist*
-                 *time-format-string-default*))
+                 *time-format-string-default*)
   " using"
   #+clisp " CLISP"
   #+sbcl " SBCL"
@@ -49,7 +49,7 @@
   #+openmcl " OpenMCL"
   #+cormanlisp " Corman Lisp"
   #+lispworks " LispWorks"
-  #+allegro " Allegro")
+  #+allegro " Allegro"))
 
 (defcommand version () ()
 "Print version information and compilation date."
