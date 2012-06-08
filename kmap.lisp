@@ -27,6 +27,7 @@
 (export '(*top-map*
           *root-map*
           define-key
+          bind-keys
 	  kbd
 	  lookup-command
 	  lookup-key
@@ -204,6 +205,11 @@ Now when you type C-t C-z, you'll see the text ``Zzzzz...'' pop up."
 (defun undefine-key (map key)
   "Clear the key binding in the specified keybinding."
   (define-key map key nil))
+
+(defun bind-keys (keymap &rest keys)
+  "Binds multiple keys in a keymap."
+  (loop for k on keys by 'cddr do 
+	 (define-key keymap (kbd (first k)) (second k))))
 
 (defun lookup-key-sequence (kmap key-seq)
   "Return the command bound to the key sequenc, KEY-SEQ, in keymap KMAP."
