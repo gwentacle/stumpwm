@@ -731,45 +731,27 @@ do:
 
 ;;; 
 ;;; formatting routines
-
+;;;
 (defun format-expand (fmt-alist fmt &rest args)
-  (let* ((chars (coerce fmt 'list))
-         (output "")
-         (cur chars))
-    ;; FIXME: this is horribly inneficient
-    (loop
-     (cond ((null cur)
-            (return-from format-expand output))
-           ;; if % is the last char in the string then it's a literal.
-           ((and (char= (car cur) #\%)
-                 (cdr cur))
-            (setf cur (cdr cur))
-            (let* ((tmp (loop while (and cur (char<= #\0 (car cur) #\9))
-                              collect (pop cur)))
-                   (len (and tmp (parse-integer (coerce tmp 'string))))
-                   ;; So that eg "%25^t" will trim from the left
-                   (from-left-p (when (char= #\^ (car cur)) (pop cur))))
-              (if (null cur)
-                  (format t "%~a~@[~a~]" len from-left-p)
-                  (let* ((fmt (cadr (assoc (car cur) fmt-alist :test 'char=)))
-                         (str (cond (fmt
-                                     ;; it can return any type, not jut as string.
-                                     (format nil "~a" (apply fmt args)))
-                                    ((char= (car cur) #\%)
-                                     (string #\%))
-                                    (t
-                                     (concatenate 'string (string #\%) (string (car cur)))))))
-                    ;; crop string if needed
-                    (setf output (concatenate 'string output
-                                              (cond ((null len) str)
-                                                    ((not from-left-p) ; Default behavior
-                                                     (subseq str 0 (min len (length str))))
-                                                    ;; New behavior -- trim from the left
-                                                    (t (subseq str (max 0 (- (length str) len)))))))
-                    (setf cur (cdr cur))))))
-           (t
-            (setf output (concatenate 'string output (string (car cur)))
-                  cur (cdr cur)))))))
+  (loop with size = (length fmt)
+        with first-escape = (position #\% fmt)
+        with output = (subseq fmt 0 first-escape)  
+        for pos = first-escape then next-escape  
+        as next-escape = (cond ((null pos) nil)
+                               ((= pos (1- size)) (setf pos nil))
+                               (t (position #\% fmt :start (1+ pos))))
+        while pos do  
+        (multiple-value-bind (maxlen ext) (parse-integer (subseq fmt (1+ pos)) :junk-allowed t) 
+          (let* ((fspec (aref fmt (+ 1 pos ext))) 
+                 (fun (apply (second (assoc fspec fmt-alist :test 'char=)) args)) 
+                 (str (if (char= fspec #\%) "%" (if (stringp fun) fun (format nil "~a" fun)))) 
+                 (strlen (length str)))
+              (setf output  
+                (concatenate 'string output  
+                             (if (and maxlen (> strlen (abs maxlen))) 
+                               (if (< maxlen 0) (subseq str (+ strlen maxlen)) (subseq str 0 maxlen)) str)
+                             (if (< (+ 2 pos ext) (1- size)) (subseq fmt (+ 2 pos ext) next-escape) "")))))
+        finally (return output)))
 
 (defvar *window-formatters* '((#\n window-map-number)
                               (#\s fmt-window-status)
