@@ -1086,32 +1086,27 @@ jump to that frame."
    Valid directions are :UP, :DOWN, :LEFT, :RIGHT.
    eg: (NEIGHBOUR :UP F FS) finds the frame in FS that is the 'best'
    neighbour above F."
-  (let ((src-edge (ecase direction
-                    (:up :top)
-                    (:down :bottom)
-                    (:left :left)
-                    (:right :right)))
-        (opposite (ecase direction
-                    (:up :bottom)
-                    (:down :top)
-                    (:left :right)
-                    (:right :left)))
-        (best-frame nil)
-        (best-overlap 0))
-    (multiple-value-bind (src-s src-e src-offset)
-        (get-edge frame src-edge)
-      (dolist (f frameset)
-        (multiple-value-bind (s e offset)
-            (get-edge f opposite)
-          (let ((overlap (- (min src-e e)
-                            (max src-s s))))
-            ;; Two edges are neighbours if they have the same offset and their starts and ends
-            ;; overlap.  We want to find the neighbour that overlaps the most.
-            (when (and (= src-offset offset)
-                       (> overlap best-overlap))
-              (setf best-frame f)
-              (setf best-overlap overlap))))))
-    best-frame))
+  (loop with src-edge = (ecase direction 
+                            (:up :top) 
+                            (:down :bottom) 
+                            (:left :left) 
+                            (:right :right)) 
+        with opposite = (ecase direction 
+                          (:up :bottom) 
+                          (:down :top) 
+                          (:left :right) 
+                          (:right :left)) 
+        with best-frame = nil 
+        with best-overlap = 0 
+        with lf = (tile-group-last-frame (current-group))
+        with (src-s src-e src-offset) = (multiple-value-list (get-edge frame src-edge)) 
+        for f in frameset as (s e offset) = (multiple-value-list (get-edge f opposite)) 
+        as overlap = (- (min src-e e) (max src-s s)) 
+        when (and (= src-offset offset) (> overlap 0)) 
+          if (eq f lf) return f 
+          else when (> overlap best-overlap) 
+                 do (setf best-overlap overlap best-frame f)
+        finally (return best-frame)))
 
 (defun move-focus-and-or-window (dir &optional win-p)
   (declare (type (member :up :down :left :right) dir))
