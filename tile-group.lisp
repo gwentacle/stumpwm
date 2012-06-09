@@ -302,10 +302,11 @@ T (default) then also focus the frame."
 (defun focus-frame (group f)
   (let ((w (frame-window f))
         (last (tile-group-current-frame group))
-        (show-indicator nil))
+        (show-indicator nil)
+        (cw (screen-focus (current-screen))))
     (setf (tile-group-current-frame group) f)
     ;; record the last frame to be used in the fother command.
-    (unless (eq f last)
+    (unless (or (eq f last) (and cw (window-fullscreen cw))) 
       (setf (tile-group-last-frame group) last)
       (run-hook-with-args *focus-frame-hook* f last)
       (setf show-indicator t))
