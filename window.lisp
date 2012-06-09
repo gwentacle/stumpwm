@@ -820,7 +820,8 @@ needed."
          (screen (group-screen group))
          (cw (screen-focus screen)))
     ;; If window to focus is already focused then our work is done.
-    (unless (eq window cw)
+    ;; We also don't want to change focus if the current window is maximized.
+    (unless (or (window-fullscreen cw) (eq window cw))
       (raise-window window)
       (screen-set-focus screen window)
       ;;(send-client-message window :WM_PROTOCOLS +wm-take-focus+)
