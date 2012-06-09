@@ -46,10 +46,14 @@
   #+ccl " CCL"
   #+ecl " ECL"
   #+abcl " ABCL"
+  #+scl " SCL"
+  #+gcl " GCL"
   #+openmcl " OpenMCL"
   #+cormanlisp " Corman Lisp"
   #+lispworks " LispWorks"
-  #+allegro " Allegro"))
+  #+allegro " Allegro"
+  #+lucid " LCL"
+  #-(or clisp sbcl cmucl ccl ecl abcl openmcl cormanlisp lispworks allegro scl gcl lucid) " unknown Lisp"))
 
 (defcommand version () ()
 "Print version information and compilation date."
