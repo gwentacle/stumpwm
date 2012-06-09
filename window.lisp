@@ -821,7 +821,7 @@ needed."
          (cw (screen-focus screen)))
     ;; If window to focus is already focused then our work is done.
     ;; We also don't want to change focus if the current window is maximized.
-    (unless (or (window-fullscreen cw) (eq window cw))
+    (unless (or (eq window cw) (and cw (window-fullscreen cw)))
       (raise-window window)
       (screen-set-focus screen window)
       ;;(send-client-message window :WM_PROTOCOLS +wm-take-focus+)
