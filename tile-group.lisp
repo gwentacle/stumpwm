@@ -1100,10 +1100,11 @@ jump to that frame."
         with best-overlap = 0 
         with lf = (tile-group-last-frame (current-group))
         with (src-s src-e src-offset) = (multiple-value-list (get-edge frame src-edge)) 
-        for f in frameset as (s e offset) = (multiple-value-list (get-edge f opposite)) 
+        for f in frameset 
+        as (s e offset) = (multiple-value-list (get-edge f opposite)) 
         as overlap = (- (min src-e e) (max src-s s)) 
-        when (and (= src-offset offset) (> overlap 0)) 
-          if (eq f lf) return f 
+        when (and (= src-offset offset) (> overlap 0))  ;; if the last frame adjoins the current frame in appropriate direction, select it 
+          if (eq f lf) return f                         ;; otherwise choose the one with the largest overlap
           else when (> overlap best-overlap) 
                  do (setf best-overlap overlap best-frame f)
         finally (return best-frame)))

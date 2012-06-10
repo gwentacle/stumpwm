@@ -163,6 +163,7 @@ at 0. Return a netwm compliant group id."
                             (list (netwm-group-id new-group))
                             :cardinal 32)
       (update-all-mode-lines)
+      (unmap-all-frame-indicator-windows)
       (run-hook-with-args *focus-group-hook* new-group old-group))))
 
 (defun move-window-to-group (window to-group)
