@@ -780,6 +780,7 @@ allocate to the new split window. If ratio is an integer then the
 number of pixels will be used. This can be handy to setup the
 desktop when starting."
   (check-type how (member :row :column))
+  (when (and (current-window) (window-fullscreen (current-window))) (return-from split-frame))
   (let* ((frame (tile-group-current-frame group))
          (head (frame-head group frame)))
     ;; don't create frames smaller than the minimum size
@@ -891,7 +892,7 @@ windows used to draw the numbers in. The caller must destroy them."
           (when (frame-window f)
             (update-decoration (frame-window f)))
           (show-frame-indicator group))
-        (message "Cannot split smaller than minimum size."))))
+        (unless (and (current-window) (window-fullscreen (current-window))) (message "Cannot split smaller than minimum size.")))))
 
 (defcommand (hsplit tile-group) (&optional (ratio "1/2")) (:string)
 "Split the current frame into 2 side-by-side frames."
