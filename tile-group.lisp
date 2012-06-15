@@ -303,10 +303,9 @@ T (default) then also focus the frame."
   (let ((w (frame-window f))
         (last (tile-group-current-frame group))
         (show-indicator nil)
-        (cw (screen-focus (current-screen))))
+        (f (or (group-fullscreen) f)))
     ;; don't change focus if we're already on the target frame
-    ;; or if the current window is maximized
-    (unless (or (eq f last) (and cw (window-fullscreen cw))) 
+    (unless (eq f last) 
     ;; record the last frame to be used in the fother command.
       (setf (tile-group-current-frame group) f 
             (tile-group-last-frame group) last)
@@ -780,7 +779,7 @@ allocate to the new split window. If ratio is an integer then the
 number of pixels will be used. This can be handy to setup the
 desktop when starting."
   (check-type how (member :row :column))
-  (when (and (current-window) (window-fullscreen (current-window))) (return-from split-frame))
+  (when (group-fullscreen) (return-from split-frame))
   (let* ((frame (tile-group-current-frame group))
          (head (frame-head group frame)))
     ;; don't create frames smaller than the minimum size
@@ -892,7 +891,7 @@ windows used to draw the numbers in. The caller must destroy them."
           (when (frame-window f)
             (update-decoration (frame-window f)))
           (show-frame-indicator group))
-        (unless (and (current-window) (window-fullscreen (current-window))) (message "Cannot split smaller than minimum size.")))))
+        (unless (group-fullscreen) (message "Cannot split smaller than minimum size.")))))
 
 (defcommand (hsplit tile-group) (&optional (ratio "1/2")) (:string)
 "Split the current frame into 2 side-by-side frames."
@@ -999,6 +998,20 @@ the current frame."
                  (if (null rest)
                      (car frames)
                      (car rest)))))
+
+(defun frame-fullscreen-p (frame)
+  "Given a frame, return t if it has a window and that window
+is fullscreen, else nil."
+  (let ((w (frame-window frame)))
+    (and w (window-fullscreen w))))
+
+(defun group-fullscreen (&optional (group (current-group)))
+  "Given a group, if some window in that group is fullscreen,
+return that window's frame, else return nil. Given no group,
+use the current group."
+  (loop with frames = (group-frames group)
+        for f in frames do
+        (when (frame-fullscreen-p f) (return f))))  
 
 (defun focus-next-frame (group)
   (focus-frame-after group (group-frames group)))

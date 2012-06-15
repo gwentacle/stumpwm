@@ -212,6 +212,7 @@ than the root window's width and height."
         (other-window group))))
 
 (defun pull-window (win &optional (to-frame (tile-group-current-frame (window-group win))))
+  (when (frame-fullscreen-p to-frame) (return-from pull-window nil))
   (let ((f (window-frame win))
         (group (window-group win)))
     (unless (eq (frame-window to-frame) win)
@@ -239,6 +240,8 @@ window. If PULL-P is T then pull the window into the current
 frame."
   ;; The window with focus is the "current" window, so find it in the
   ;; list and give that window focus
+  ;; Fail if the destination group
+  (when (group-fullscreen group) (return-from focus-forward nil))
   (let* ((w (group-current-window group))
          (wins (remove-if-not predicate (cdr (member w window-list))))
          (nw (if (null wins)
