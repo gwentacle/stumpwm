@@ -300,10 +300,10 @@ T (default) then also focus the frame."
       (raise-modals-of w))))
 
 (defun focus-frame (group f)
-  (let ((w (frame-window f))
+  (let ((f (or (group-fullscreen) f))
+        (w (frame-window f))
         (last (tile-group-current-frame group))
-        (show-indicator nil)
-        (f (or (group-fullscreen) f)))
+        (show-indicator nil))
     ;; don't change focus if we're already on the target frame
     (unless (eq f last) 
     ;; record the last frame to be used in the fother command.
@@ -905,42 +905,43 @@ windows used to draw the numbers in. The caller must destroy them."
 "Remove the specified frame in the specified group (defaults to current
 group, current frame). Windows in the frame are migrated to the frame taking up its
 space."
-  (let* ((head (frame-head group frame))
-         (current (tile-group-current-frame group))
-         (tree (tile-group-frame-head group head))
-         (s (closest-sibling (list tree) frame))
-         ;; grab a leaf of the siblings. The siblings doesn't have to be
-         ;; a frame.
-         (l (tree-accum-fn s
-                           (lambda (&rest siblings)
-                             (car siblings))
-                           #'identity)))
-    ;; Only remove the current frame if it has a sibling
-    (if (atom tree)
-        (message "No more frames!")
-        (when s
-          (when (frame-is-head group frame)
-            (setf (frame-number l) (frame-number frame)))
-          ;; Move the windows from the removed frame to its sibling
-          (migrate-frame-windows group frame l)
-          ;; If the frame has no window, give it the current window of
-          ;; the current frame.
-          (unless (frame-window l)
-            (setf (frame-window l)
-                  (frame-window frame)))
-          ;; Unsplit
-          (setf (tile-group-frame-head group head) (remove-frame tree frame))
-          ;; update the current frame and sync all windows
-          (when (eq frame current)
-            (setf (tile-group-current-frame group) l))
-          (tree-iterate tree
-                        (lambda (leaf)
-                          (sync-frame-windows group leaf)))
-          (frame-raise-window group l (frame-window l) nil)
-          (when (frame-window l)
-            (update-decoration (frame-window l)))
-          (when (eq frame current)
-            (show-frame-indicator group))))))
+  (unless (frame-fullscreen-p frame)
+    (let* ((head (frame-head group frame))
+           (current (tile-group-current-frame group))
+           (tree (tile-group-frame-head group head))
+           (s (closest-sibling (list tree) frame))
+           ;; grab a leaf of the siblings. The siblings doesn't have to be
+           ;; a frame.
+           (l (tree-accum-fn s
+                             (lambda (&rest siblings)
+                               (car siblings))
+                             #'identity)))
+      ;; Only remove the current frame if it has a sibling
+      (if (atom tree)
+          (message "No more frames!")
+          (when s
+            (when (frame-is-head group frame)
+              (setf (frame-number l) (frame-number frame)))
+            ;; Move the windows from the removed frame to its sibling
+            (migrate-frame-windows group frame l)
+            ;; If the frame has no window, give it the current window of
+            ;; the current frame.
+            (unless (frame-window l)
+              (setf (frame-window l)
+                    (frame-window frame)))
+            ;; Unsplit
+            (setf (tile-group-frame-head group head) (remove-frame tree frame))
+            ;; update the current frame and sync all windows
+            (when (eq frame current)
+              (setf (tile-group-current-frame group) l))
+            (tree-iterate tree
+                          (lambda (leaf)
+                            (sync-frame-windows group leaf)))
+            (frame-raise-window group l (frame-window l) nil)
+            (when (frame-window l)
+              (update-decoration (frame-window l)))
+            (when (eq frame current)
+              (show-frame-indicator group)))))))
 
 (defcommand-alias remove remove-split)
 
