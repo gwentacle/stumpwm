@@ -318,6 +318,7 @@ _NET_WM_STATE_DEMANDS_ATTENTION set"
 ;; FIXME: should we raise the winodw or its parent?
 (defmethod raise-window (win)
   "Map the window if needed and bring it to the top of the stack. Does not affect focus."
+  (when (group-fullscreen) (return-from raise-window nil))
   (when (window-urgent-p win)
     (window-clear-urgency win))
   (when (window-hidden-p win)
@@ -818,10 +819,11 @@ needed."
   (dformat 3 "focus-window: ~s~%" window)
   (let* ((group (window-group window))
          (screen (group-screen group))
-         (cw (screen-focus screen)))
+         (cw (screen-focus screen))
+         (fframe (group-fullscreen group))
+         (window (if fframe (frame-window fframe) window)))
     ;; If window to focus is already focused then our work is done.
-    ;; We also don't want to change focus if the current window is maximized.
-    (unless (or (eq window cw) (and cw (window-fullscreen cw)))
+    (unless (eq window cw)
       (raise-window window)
       (screen-set-focus screen window)
       ;;(send-client-message window :WM_PROTOCOLS +wm-take-focus+)
