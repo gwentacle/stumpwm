@@ -903,44 +903,43 @@ windows used to draw the numbers in. The caller must destroy them."
 (defcommand (remove-split tile-group) (&optional (group (current-group)) (frame (tile-group-current-frame group))) ()
 "Remove the specified frame in the specified group (defaults to current
 group, current frame). Windows in the frame are migrated to the frame taking up its
-space."
-  (unless (frame-fullscreen-p frame)
-    (let* ((head (frame-head group frame))
-           (current (tile-group-current-frame group))
-           (tree (tile-group-frame-head group head))
-           (s (closest-sibling (list tree) frame))
-           ;; grab a leaf of the siblings. The siblings doesn't have to be
-           ;; a frame.
-           (l (tree-accum-fn s
-                             (lambda (&rest siblings)
-                               (car siblings))
-                             #'identity)))
-      ;; Only remove the current frame if it has a sibling
-      (if (atom tree)
-          (message "No more frames!")
-          (when s
-            (when (frame-is-head group frame)
-              (setf (frame-number l) (frame-number frame)))
-            ;; Move the windows from the removed frame to its sibling
-            (migrate-frame-windows group frame l)
-            ;; If the frame has no window, give it the current window of
-            ;; the current frame.
-            (unless (frame-window l)
-              (setf (frame-window l)
-                    (frame-window frame)))
-            ;; Unsplit
-            (setf (tile-group-frame-head group head) (remove-frame tree frame))
-            ;; update the current frame and sync all windows
-            (when (eq frame current)
-              (setf (tile-group-current-frame group) l))
-            (tree-iterate tree
-                          (lambda (leaf)
-                            (sync-frame-windows group leaf)))
-            (frame-raise-window group l (frame-window l) nil)
-            (when (frame-window l)
-              (update-decoration (frame-window l)))
-            (when (eq frame current)
-              (show-frame-indicator group)))))))
+space." 
+  (let* ((head (frame-head group frame)) 
+         (current (tile-group-current-frame group)) 
+         (tree (tile-group-frame-head group head)) 
+         (s (closest-sibling (list tree) frame)) 
+         ;; grab a leaf of the siblings. The siblings doesn't have to be
+         ;; a frame.
+         (l (tree-accum-fn s 
+                           (lambda (&rest siblings) 
+                             (car siblings)) 
+                           #'identity))) 
+    ;; Only remove the current frame if it has a sibling
+    (if (atom tree)
+        (message "No more frames!")
+        (when s
+          (when (frame-is-head group frame)
+            (setf (frame-number l) (frame-number frame)))
+          ;; Move the windows from the removed frame to its sibling
+          (migrate-frame-windows group frame l)
+          ;; If the frame has no window, give it the current window of
+          ;; the current frame.
+          (unless (frame-window l)
+            (setf (frame-window l)
+                  (frame-window frame)))
+          ;; Unsplit
+          (setf (tile-group-frame-head group head) (remove-frame tree frame))
+          ;; update the current frame and sync all windows
+          (when (eq frame current)
+            (setf (tile-group-current-frame group) l))
+          (tree-iterate tree
+                        (lambda (leaf)
+                          (sync-frame-windows group leaf)))
+          (frame-raise-window group l (frame-window l) nil)
+          (when (frame-window l)
+            (update-decoration (frame-window l)))
+          (when (eq frame current)
+            (show-frame-indicator group))))))
 
 (defcommand-alias remove remove-split)
 
@@ -1007,14 +1006,6 @@ is fullscreen, else nil."
 
 (defun head-fullscreen (&optional (group (current-group)) (head (current-head)))
   (remove-if-not #'window-fullscreen (head-windows group head)))
-
-(defun group-fullscreen (&optional (group (current-group)))
-  "Given a group, if some window in that group is fullscreen,
-return that window's frame, else return nil. Given no group,
-use the current group."
-  (loop with frames = (group-frames group)
-        for f in frames do
-        (when (frame-fullscreen-p f) (return f))))  
 
 (defun focus-next-frame (group)
   (focus-frame-after group (group-frames group)))
