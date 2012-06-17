@@ -241,7 +241,6 @@ frame."
   ;; The window with focus is the "current" window, so find it in the
   ;; list and give that window focus
   ;; Fail if the destination group
-  (when (group-fullscreen group) (return-from focus-forward nil))
   (let* ((w (group-current-window group))
          (wins (remove-if-not predicate (cdr (member w window-list))))
          (nw (if (null wins)

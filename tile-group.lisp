@@ -300,9 +300,8 @@ T (default) then also focus the frame."
       (raise-modals-of w))))
 
 (defun focus-frame (group f)
-  (let ((f (or (group-fullscreen) f))
-        (w (frame-window f))
-        (last (tile-group-current-frame group))
+  (let ((w (frame-window f)) 
+        (last (tile-group-current-frame group)) 
         (show-indicator nil))
     ;; don't change focus if we're already on the target frame
     (unless (eq f last) 
@@ -311,9 +310,9 @@ T (default) then also focus the frame."
             (tile-group-last-frame group) last)
       (run-hook-with-args *focus-frame-hook* f last)
       (setf show-indicator t))
-    (if w
-        (focus-window w)
-        (no-focus group (frame-window last)))
+    (if w 
+      (focus-window w)
+      (no-focus group (frame-window last)))
     (if show-indicator
         (show-frame-indicator group)
         (show-frame-outline group))))
@@ -779,7 +778,7 @@ allocate to the new split window. If ratio is an integer then the
 number of pixels will be used. This can be handy to setup the
 desktop when starting."
   (check-type how (member :row :column))
-  (when (group-fullscreen) (return-from split-frame))
+  (when (head-fullscreen) (return-from split-frame))
   (let* ((frame (tile-group-current-frame group))
          (head (frame-head group frame)))
     ;; don't create frames smaller than the minimum size
@@ -891,7 +890,7 @@ windows used to draw the numbers in. The caller must destroy them."
           (when (frame-window f)
             (update-decoration (frame-window f)))
           (show-frame-indicator group))
-        (unless (group-fullscreen) (message "Cannot split smaller than minimum size.")))))
+        (unless (head-fullscreen) (message "Cannot split smaller than minimum size.")))))
 
 (defcommand (hsplit tile-group) (&optional (ratio "1/2")) (:string)
 "Split the current frame into 2 side-by-side frames."
@@ -1005,6 +1004,9 @@ the current frame."
 is fullscreen, else nil."
   (let ((w (frame-window frame)))
     (and w (window-fullscreen w))))
+
+(defun head-fullscreen (&optional (group (current-group)) (head (current-head)))
+  (remove-if-not #'window-fullscreen (head-windows group head)))
 
 (defun group-fullscreen (&optional (group (current-group)))
   "Given a group, if some window in that group is fullscreen,

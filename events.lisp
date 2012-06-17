@@ -480,7 +480,7 @@ converted to an atom is removed."
            (activate-fullscreen window))))))
 
 (defun maybe-map-window (window)
-  (if (or (deny-request-p window *deny-map-request*) (group-fullscreen)) 
+  (if (or (deny-request-p window *deny-map-request*) (head-fullscreen (window-group window) (window-head window))) 
       (unless *suppress-deny-messages*
         (if (eq (window-group window) (current-group))
             (echo-string (window-screen window) (format nil "'~a' denied map request" (window-name window)))
@@ -491,7 +491,7 @@ converted to an atom is removed."
                               t nil))))
 
 (defun maybe-raise-window (window)
-  (if (or (deny-request-p window *deny-raise-request*) (group-fullscreen)) 
+  (if (or (deny-request-p window *deny-raise-request*) (head-fullscreen (window-group window) (window-head window))) 
       (unless (or *suppress-deny-messages*
                   ;; don't mention windows that are already visible
                   (window-visible-p window))
